@@ -361,6 +361,15 @@ body {
   background: var(--bg);
 }
 
+.group-name-input:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.group-name-input:disabled:hover {
+  border-color: transparent;
+}
+
 .group-count {
   color: var(--text-muted);
   font-family: var(--font-mono);

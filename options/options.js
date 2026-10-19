@@ -53,9 +53,24 @@ const PROVIDERS = {
 // All per-provider storage keys
 const ALL_KEY_FIELDS = ["apiKey_claude", "apiKey_openai", "apiKey_gemini", "ollamaUrl"];
 
+const GROUP_COLORS = ["blue", "cyan", "grey", "green", "orange", "pink", "purple", "red", "yellow"];
+
+const DEFAULT_GROUPS = [
+  { name: "Development", color: "blue", description: "GitHub, code editors, docs, Stack Overflow, CI" },
+  { name: "News", color: "orange", description: "News sites, RSS, politics, finance news" },
+  { name: "Entertainment", color: "purple", description: "YouTube, streaming, music, games, social media" },
+  { name: "Shopping", color: "green", description: "E-commerce, price comparison, product pages" },
+  { name: "Work", color: "cyan", description: "Email, calendars, office docs, chat tools" },
+  { name: "Other", color: "grey", description: "Anything that does not fit the groups above" },
+];
+
 const providerTabs = document.getElementById("provider-tabs");
 const providerConfig = document.getElementById("provider-config");
 const cooldownSelect = document.getElementById("cooldown");
+const groupModeSelect = document.getElementById("group-mode");
+const groupsEditor = document.getElementById("groups-editor");
+const groupsList = document.getElementById("groups-list");
+const btnAddGroup = document.getElementById("btn-add-group");
 const btnSave = document.getElementById("btn-save");
 const statusEl = document.getElementById("status");
 
@@ -269,12 +284,95 @@ function renderProviderConfig() {
   }
 }
 
+// --- Group editor ---
+
+function renderGroupRows(groups) {
+  clearChildren(groupsList);
+  for (const g of groups) {
+    groupsList.appendChild(createGroupRow(g));
+  }
+}
+
+function createGroupRow(group) {
+  const row = document.createElement("div");
+  row.className = "group-row";
+
+  const colorSelect = document.createElement("select");
+  colorSelect.className = "group-color";
+  colorSelect.title = "Group color";
+  for (const c of GROUP_COLORS) {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    if (c === group.color) opt.selected = true;
+    colorSelect.appendChild(opt);
+  }
+  colorSelect.style.borderColor = `var(--group-${group.color}, var(--border))`;
+  colorSelect.addEventListener("change", () => {
+    colorSelect.style.borderColor = `var(--group-${colorSelect.value}, var(--border))`;
+  });
+  row.appendChild(colorSelect);
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.className = "group-name";
+  nameInput.placeholder = "Group name";
+  nameInput.value = group.name;
+  row.appendChild(nameInput);
+
+  const descInput = document.createElement("input");
+  descInput.type = "text";
+  descInput.className = "group-desc";
+  descInput.placeholder = "Description (what belongs here)";
+  descInput.value = group.description || "";
+  row.appendChild(descInput);
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "btn btn-secondary btn-sm group-remove";
+  removeBtn.textContent = "×";
+  removeBtn.title = "Remove group";
+  removeBtn.addEventListener("click", () => row.remove());
+  row.appendChild(removeBtn);
+
+  return row;
+}
+
+function collectGroups() {
+  const groups = [];
+  for (const row of groupsList.querySelectorAll(".group-row")) {
+    const name = row.querySelector(".group-name").value.trim();
+    if (!name) continue;
+    groups.push({
+      name,
+      color: row.querySelector(".group-color").value,
+      description: row.querySelector(".group-desc").value.trim(),
+    });
+  }
+  return groups;
+}
+
+function updateGroupsEditorVisibility() {
+  groupsEditor.style.display = groupModeSelect.value === "predefined" ? "block" : "none";
+}
+
+btnAddGroup.addEventListener("click", () => {
+  const usedColors = new Set(collectGroups().map((g) => g.color));
+  const color = GROUP_COLORS.find((c) => !usedColors.has(c)) || "grey";
+  const row = createGroupRow({ name: "", color, description: "" });
+  groupsList.appendChild(row);
+  row.querySelector(".group-name").focus();
+});
+
+groupModeSelect.addEventListener("change", updateGroupsEditorVisibility);
+
 // --- Load / Save ---
 
 async function loadSettings() {
   allSavedData = await browser.storage.local.get([
     "provider", "cooldown",
     "model_claude", "model_openai", "model_gemini", "model_ollama",
+    "groupMode", "customGroups",
     ...ALL_KEY_FIELDS,
   ]);
   savedProvider = allSavedData.provider || "claude";
@@ -300,6 +398,14 @@ async function loadSettings() {
 
   renderProviderTabs();
   renderProviderConfig();
+
+  groupModeSelect.value = allSavedData.groupMode || "predefined";
+  renderGroupRows(
+    Array.isArray(allSavedData.customGroups) && allSavedData.customGroups.length > 0
+      ? allSavedData.customGroups
+      : DEFAULT_GROUPS
+  );
+  updateGroupsEditorVisibility();
 }
 
 btnSave.addEventListener("click", async () => {
@@ -308,6 +414,27 @@ btnSave.addEventListener("click", async () => {
     provider: activeProvider,
     cooldown: parseInt(cooldownSelect.value, 10),
   };
+
+  // Group mode + predefined group list
+  const groupMode = groupModeSelect.value;
+  toSave.groupMode = groupMode;
+  if (groupMode === "predefined") {
+    const groups = collectGroups();
+    const names = groups.map((g) => g.name.toLowerCase());
+    if (groups.length < 2) {
+      showStatus("Define at least 2 groups (with names).", "error");
+      return;
+    }
+    if (new Set(names).size !== names.length) {
+      showStatus("Group names must be unique.", "error");
+      return;
+    }
+    if (!names.includes("other")) {
+      showStatus('Include an "Other" group as a catch-all.', "error");
+      return;
+    }
+    toSave.customGroups = groups;
+  }
 
   // Resolve model
   const modelSelect = document.getElementById("model");
@@ -357,10 +484,14 @@ btnSave.addEventListener("click", async () => {
   allSavedData = await browser.storage.local.get([
     "provider", "cooldown",
     "model_claude", "model_openai", "model_gemini", "model_ollama",
+    "groupMode", "customGroups",
     ...ALL_KEY_FIELDS,
   ]);
   renderProviderTabs();
   renderProviderConfig();
+  if (allSavedData.groupMode === "predefined") {
+    renderGroupRows(allSavedData.customGroups || DEFAULT_GROUPS);
+  }
   showStatus("Saved!", "success");
 });
 

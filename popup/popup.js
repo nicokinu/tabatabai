@@ -8,6 +8,7 @@ const views = {
 };
 
 let currentGroups = [];
+let groupMode = "predefined";
 
 function showView(name) {
   Object.values(views).forEach((v) => v.classList.add("hidden"));
@@ -64,7 +65,9 @@ async function init() {
     "apiKey", // legacy fallback
     "model_claude", "model_openai", "model_gemini", "model_ollama",
     "model", // legacy fallback
+    "groupMode",
   ]);
+  groupMode = data.groupMode || "predefined";
   const provider = data.provider || "claude";
   const providerKeyMap = { claude: "apiKey_claude", openai: "apiKey_openai", gemini: "apiKey_gemini" };
   const apiKey = data[providerKeyMap[provider]] || data.apiKey || "";
@@ -129,6 +132,8 @@ function renderGroups(groups) {
     nameInput.className = "group-name-input";
     nameInput.value = group.name;
     nameInput.dataset.index = groupIndex;
+    nameInput.disabled = groupMode === "predefined";
+    if (groupMode === "predefined") nameInput.title = "Group names come from your predefined list";
     nameInput.addEventListener("input", (e) => {
       currentGroups[groupIndex].name = e.target.value;
     });

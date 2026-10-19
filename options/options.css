@@ -362,6 +362,62 @@ input[type="text"]:focus {
   margin: 20px 0;
 }
 
+/* ── Group Editor ── */
+#groups-editor {
+  margin-bottom: 16px;
+}
+
+#groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.group-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 1.4fr 34px;
+  gap: 8px;
+  align-items: center;
+}
+
+.group-row .group-color {
+  padding: 9px 8px;
+  font-size: 12px;
+  padding-right: 26px;
+  background-position: right 8px center;
+  border-left: 4px solid var(--border);
+}
+
+.group-row .group-remove {
+  padding: 7px 0;
+  width: 34px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--red);
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* Firefox tab-group palette */
+:root {
+  --group-blue: #37adff;
+  --group-cyan: #00feff;
+  --group-grey: #8f8f9d;
+  --group-green: #57bd84;
+  --group-orange: #ff9c2a;
+  --group-pink: #fc5cb8;
+  --group-purple: #be75f7;
+  --group-red: #f42f5a;
+  --group-yellow: #f6da25;
+}
+
 /* ── Credential Fields Transition ── */
 #credential-fields .field {
   animation: fieldReveal 0.2s ease-out;

@@ -25,6 +25,23 @@
       </select>
     </div>
 
+    <hr class="section-divider" />
+
+    <div class="field">
+      <label for="group-mode">Grouping Mode</label>
+      <select id="group-mode">
+        <option value="predefined">Predefined groups only (assign tabs to my list)</option>
+        <option value="free">Free-form (AI invents group names)</option>
+      </select>
+    </div>
+
+    <div id="groups-editor">
+      <label>My Groups</label>
+      <div id="groups-list"></div>
+      <button type="button" id="btn-add-group" class="btn btn-secondary btn-sm">+ Add Group</button>
+      <p class="hint">Tabs are always assigned to one of these groups. Include an "Other" group as a catch-all.</p>
+    </div>
+
     <div class="actions">
       <button id="btn-save" class="btn btn-primary">Save</button>
       <span id="status" class="status"></span>

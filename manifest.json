@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Hayatab",
-  "version": "1.0.0",
-  "description": "AI-powered tab grouping",
+  "name": "Hayatab (Predefined Groups)",
+  "version": "1.1.0",
+  "description": "AI-powered tab grouping into your own predefined groups",
   "permissions": [
     "tabs",
     "tabGroups",
@@ -35,7 +35,7 @@
   "content_security_policy": "script-src 'self'; object-src 'none'; connect-src https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com http://localhost:*;",
   "browser_specific_settings": {
     "gecko": {
-      "id": "hayatab@hayase.moe",
+      "id": "hayatab-predefined@nicokinu.moz",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": ["browsingActivity"],
