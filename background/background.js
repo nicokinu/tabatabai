@@ -351,7 +351,7 @@ async function callAPI(provider, settings, tabData, { systemPrompt = OPEN_SYSTEM
         model: model || "gpt-4o-mini",
         max_tokens: 1024,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
       };
@@ -364,7 +364,7 @@ async function callAPI(provider, settings, tabData, { systemPrompt = OPEN_SYSTEM
       url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`;
       headers = { "Content-Type": "application/json", "x-goog-api-key": apiKey };
       body = {
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: "user", parts: [{ text: userMessage }] }],
         generationConfig: { maxOutputTokens: 1024 },
       };
@@ -388,7 +388,7 @@ async function callAPI(provider, settings, tabData, { systemPrompt = OPEN_SYSTEM
         model: model || "llama3.2",
         stream: false,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
       };
@@ -406,7 +406,7 @@ async function callAPI(provider, settings, tabData, { systemPrompt = OPEN_SYSTEM
       body = {
         model: model || "claude-haiku-4-5-20251001",
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: [{ role: "user", content: userMessage }],
       };
     }
