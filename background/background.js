@@ -68,6 +68,7 @@ const handlers = {
   analyzeTabs: handleAnalyzeTabs,
   applyGroups: handleApplyGroups,
   getPendingGroups: handleGetPendingGroups,
+  listTabGroups: handleListTabGroups,
 };
 
 browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -180,6 +181,46 @@ async function handleApplyGroups({ groups }) {
 
 async function handleGetPendingGroups() {
   return { ok: true, groups: pendingGroups, timestamp: pendingTimestamp };
+}
+
+// Collect the native tab groups of the window that currently holds the
+// options page, so the user can seed My Groups from real groups.
+async function handleListTabGroups({ windowId }) {
+  if (!browser.tabGroups?.query) {
+    throw new Error("このブラウザはタブグループAPI非対応のため読み込めません。");
+  }
+  const win = windowId != null
+    ? await browser.windows.get(windowId)
+    : await browser.windows.getCurrent();
+
+  const [groups, tabs] = await Promise.all([
+    browser.tabGroups.query({ windowId: win.id }),
+    browser.tabs.query({ windowId: win.id }),
+  ]);
+
+  // Count real (non-group-collapsed noise) tabs per group and remember the
+  // left-to-right position of each group's first tab.
+  const tabCount = new Map();
+  const firstIndex = new Map();
+  for (const t of tabs) {
+    if (t.groupId === -1 || t.groupId === browser.tabGroups.TAB_GROUP_ID_NONE || t.pinned) continue;
+    tabCount.set(t.groupId, (tabCount.get(t.groupId) || 0) + 1);
+    if (!firstIndex.has(t.groupId) || t.index < firstIndex.get(t.groupId)) {
+      firstIndex.set(t.groupId, t.index);
+    }
+  }
+
+  const result = groups
+    .filter((g) => (tabCount.get(g.id) || 0) > 0)
+    .sort((a, b) => (firstIndex.get(a.id) ?? 0) - (firstIndex.get(b.id) ?? 0))
+    .map((g) => ({
+      name: (g.title || "").trim() || "Group",
+      color: g.color === "grey" ? "grey" : (g.color || "grey"),
+      description: "",
+      tabCount: tabCount.get(g.id),
+    }));
+
+  return { ok: true, groups: result, windowId: win.id };
 }
 
 async function applyGroupsByNative(groups, validTabIds, windowId) {
@@ -298,7 +339,6 @@ function normalizeGroups(groups) {
   }
   return result.length > 0 ? result : DEFAULT_GROUPS.map((g) => ({ ...g }));
 }
-
 function sanitizeTabData(tabs) {
   const BLOCKLIST = [
     "ignore", "override", "disregard", "forget", "system prompt",

@@ -71,6 +71,7 @@ const groupModeSelect = document.getElementById("group-mode");
 const groupsEditor = document.getElementById("groups-editor");
 const groupsList = document.getElementById("groups-list");
 const btnAddGroup = document.getElementById("btn-add-group");
+const btnImportGroups = document.getElementById("btn-import-groups");
 const btnSave = document.getElementById("btn-save");
 const statusEl = document.getElementById("status");
 
@@ -412,6 +413,47 @@ btnAddGroup.addEventListener("click", () => {
 });
 
 groupModeSelect.addEventListener("change", updateGroupsEditorVisibility);
+
+// --- Import existing native tab groups into My Groups ---
+
+async function importTabGroups() {
+  btnImportGroups.disabled = true;
+  btnImportGroups.textContent = "読み込み中…";
+  try {
+    const resp = await browser.runtime.sendMessage({ action: "listTabGroups" });
+    if (!resp.ok) throw new Error(resp.error || "読み込みに失敗しました。");
+    if (resp.groups.length === 0) {
+      showStatus("タブグループが見つかりませんでした。", "error");
+      return;
+    }
+
+    const existing = collectGroups();
+    const existingNames = new Set(existing.map((g) => g.name.toLowerCase()));
+    const imported = resp.groups.filter((g) => !existingNames.has(g.name.toLowerCase()));
+    if (imported.length === 0) {
+      showStatus("すべてのグループが既に登録済みです。", "error");
+      return;
+    }
+
+    // Insert before "Other" so the catch-all stays last.
+    const otherRow = [...groupsList.querySelectorAll(".group-row")]
+      .find((r) => r.querySelector(".group-name").value.trim().toLowerCase() === "other");
+    for (const g of imported) {
+      const row = createGroupRow(g);
+      if (otherRow) groupsList.insertBefore(row, otherRow);
+      else groupsList.appendChild(row);
+    }
+    syncMoveButtonState();
+    showStatus(`${imported.length}件を追加しました(保存してください)`, "success");
+  } catch (err) {
+    showStatus(err.message || "読み込みに失敗しました。", "error");
+  } finally {
+    btnImportGroups.disabled = false;
+    btnImportGroups.textContent = "⤓ 今あるタブグループを反映";
+  }
+}
+
+btnImportGroups.addEventListener("click", importTabGroups);
 
 // --- Load / Save ---
 
