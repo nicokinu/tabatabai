@@ -1,10 +1,10 @@
-# Privacy Policy - Hayatab
+# Privacy Policy - Tabatabai
 
 **Last updated:** 2026-02-17
 
 ## What This Extension Does
 
-Hayatab uses AI to analyze your open browser tabs and suggest logical groupings. It sends tab metadata to an AI provider you choose, then organizes your tabs based on the response.
+Tabatabai uses AI to analyze your open browser tabs and suggest logical groupings. It sends tab metadata to an AI provider you choose, then organizes your tabs based on the response.
 
 ## Data Sent Externally
 

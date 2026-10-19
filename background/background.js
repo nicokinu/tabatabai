@@ -356,7 +356,7 @@ function sanitizeTabData(tabs) {
   });
 
   if (filtered > 0) {
-    console.log(`[Hayatab] Filtered ${filtered} suspicious tab title(s) before AI analysis.`);
+    console.log(`[Tabatabai] Filtered ${filtered} suspicious tab title(s) before AI analysis.`);
   }
 
   return sanitized;
