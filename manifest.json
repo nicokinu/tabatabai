@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Tabatabai",
   "version": "1.1.0",
-  "description": "AI tab grouping into your predefined groups",
+  "description": "タブを束ねるAI — group your tabs into predefined groups",
   "permissions": [
     "tabs",
     "tabGroups",

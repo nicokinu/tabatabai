@@ -4,7 +4,7 @@ AI-powered tab grouping for Firefox. Analyzes your open tabs and organizes them 
 
 Fork of [Hayatab](https://github.com/Haya-ChiChi/hayatab) with a predefined-groups mode: you define the groups (name, color, description, order) once, and every analysis assigns tabs into exactly those groups, laid out left-to-right in your order.
 
-> タブたばい。タブをたばねる(束ねる)アドオン。
+> **タブを束ねるAI。**
 
 ## Features
 
