@@ -376,12 +376,16 @@ input[type="text"]:focus {
 
 .group-row {
   display: grid;
-  grid-template-columns: 90px 1fr 1.4fr 34px;
+  grid-template-columns: 90px 1fr 34px;
+  grid-template-areas:
+    "color name remove"
+    "desc desc desc";
   gap: 8px;
   align-items: center;
 }
 
 .group-row .group-color {
+  grid-area: color;
   padding: 9px 8px;
   font-size: 12px;
   padding-right: 26px;
@@ -389,7 +393,34 @@ input[type="text"]:focus {
   border-left: 4px solid var(--border);
 }
 
+.group-row .group-name {
+  grid-area: name;
+}
+
+.group-row .group-desc {
+  grid-area: desc;
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.group-row .group-desc:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
 .group-row .group-remove {
+  grid-area: remove;
   padding: 7px 0;
   width: 34px;
   text-align: center;
@@ -403,6 +434,23 @@ input[type="text"]:focus {
   color: var(--text-muted);
   margin-top: 8px;
   line-height: 1.5;
+}
+
+.group-mode-help {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.group-mode-help summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.group-mode-help p {
+  margin-top: 8px;
 }
 
 /* Firefox tab-group palette */

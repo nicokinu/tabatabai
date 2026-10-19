@@ -176,14 +176,48 @@ async function handleGetPendingGroups() {
 }
 
 async function applyGroupsByNative(groups, validTabIds, windowId) {
-  let applied = 0;
-  for (const group of groups) {
-    const validIds = group.tabIds.filter((id) => validTabIds.has(id));
-    if (validIds.length === 0) continue;
+  // Fresh query so we know each tab's current index and pinned state.
+  const allTabs = await browser.tabs.query({ windowId });
+  const byId = new Map(allTabs.map((t) => [t.id, t]));
+  const pinnedCount = allTabs.filter((t) => t.pinned).length;
 
+  // Order groups by the position of their first tab, then sort tabs within
+  // each group, so the final strip reads as contiguous blocks in order.
+  const ordered = groups
+    .map((g) => ({
+      ...g,
+      tabIds: g.tabIds
+        .filter((id) => validTabIds.has(id) && byId.has(id))
+        .sort((a, b) => byId.get(a).index - byId.get(b).index),
+    }))
+    .filter((g) => g.tabIds.length > 0)
+    .sort((a, b) => byId.get(a.tabIds[0]).index - byId.get(b.tabIds[0]).index);
+
+  // Desired layout: unpinned tabs grouped together in order, pinned tabs stay
+  // at the front (Firefox keeps them there automatically).
+  const sortedIds = ordered.flatMap((g) => g.tabIds);
+  const unsortedIds = allTabs
+    .filter((t) => !t.pinned && !validTabIds.has(t.id))
+    .sort((a, b) => a.index - b.index)
+    .map((t) => t.id);
+  const layout = [...sortedIds, ...unsortedIds];
+
+  // Move each tab to its target index only if it isn't already there.
+  for (let i = 0; i < layout.length; i++) {
+    try {
+      if (byId.get(layout[i]).index !== pinnedCount + i) {
+        await browser.tabs.move(layout[i], { index: pinnedCount + i });
+      }
+    } catch (err) {
+      console.warn(`Failed to move tab ${layout[i]}:`, err);
+    }
+  }
+
+  let applied = 0;
+  for (const group of ordered) {
     try {
       const groupId = await browser.tabs.group({
-        tabIds: validIds,
+        tabIds: group.tabIds,
         createProperties: { windowId },
       });
 
@@ -204,13 +238,21 @@ async function applyGroupsByNative(groups, validTabIds, windowId) {
 }
 
 async function applyGroupsBySort(groups, validTabIds) {
-  // Build the desired tab order: groups in sequence, each group's tabs in original order
-  const sortedIds = [];
-  for (const group of groups) {
-    for (const id of group.tabIds) {
-      if (validTabIds.has(id)) sortedIds.push(id);
-    }
+  // Order groups by the position of their first tab, then sort tabs within
+  // each group, so the final strip reads as contiguous blocks in order.
+  const allTabs = await browser.tabs.query({ currentWindow: true });
+  const byId = new Map(allTabs.map((t) => [t.id, t]));
+  const ordered = [];
+  for (const g of groups) {
+    const ids = g.tabIds
+      .filter((id) => validTabIds.has(id) && byId.has(id))
+      .sort((a, b) => byId.get(a).index - byId.get(b).index);
+    if (ids.length > 0) ordered.push({ ...g, tabIds: ids });
   }
+  ordered.sort((a, b) => byId.get(a.tabIds[0]).index - byId.get(b.tabIds[0]).index);
+
+  // Build the desired tab order: groups in sequence, each group's tabs in original order
+  const sortedIds = ordered.flatMap((g) => g.tabIds);
 
   if (sortedIds.length === 0) throw new Error("No tabs to sort. Try re-analyzing.");
 
@@ -244,7 +286,7 @@ function normalizeGroups(groups) {
     result.push({
       name,
       color: validColors.has(g.color) ? g.color : "grey",
-      description: String(g.description || "").replace(/[\x00-\x1f\x7f]/g, "").trim().slice(0, 200),
+      description: String(g.description || "").replace(/[\x00-\x1f\x7f]/g, "").trim().slice(0, 600),
     });
   }
   return result.length > 0 ? result : DEFAULT_GROUPS.map((g) => ({ ...g }));

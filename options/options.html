@@ -40,6 +40,20 @@
       <div id="groups-list"></div>
       <button type="button" id="btn-add-group" class="btn btn-secondary btn-sm">+ Add Group</button>
       <p class="hint">Tabs are always assigned to one of these groups. Include an "Other" group as a catch-all.</p>
+      <details class="group-mode-help">
+        <summary>グループ指定の仕組み</summary>
+        <p>
+          AIには各グループの<b>名前と説明</b>が渡され、開いているタブのタイトル・URLを
+          見て「どのグループに入るべきか」を判断します。説明は詳しいほど精度が上がります
+          (例: 「GitHub・ローカル開発・サーバーのドキュメントはここ。ニュースサイトの技術記事はNewsへ」)。
+          AIがリストにない名前を返した場合や、どのグループにも入らなかったタブは
+          <b>Other</b> に自動でまとめられます。
+        </p>
+        <p>
+          「Grouping Mode」を <b>Free-form</b> にすると、このリストは無視されて
+          AIが毎回自由にグループ名を作ります(上流の元の挙動)。
+        </p>
+      </details>
     </div>
 
     <div class="actions">

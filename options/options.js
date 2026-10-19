@@ -320,10 +320,10 @@ function createGroupRow(group) {
   nameInput.value = group.name;
   row.appendChild(nameInput);
 
-  const descInput = document.createElement("input");
-  descInput.type = "text";
+  const descInput = document.createElement("textarea");
   descInput.className = "group-desc";
   descInput.placeholder = "Description (what belongs here)";
+  descInput.rows = 3;
   descInput.value = group.description || "";
   row.appendChild(descInput);
 
