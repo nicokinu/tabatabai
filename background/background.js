@@ -44,6 +44,7 @@ Rules:
 4. Use the color assigned to each group in the list below.
 5. Base grouping on the group descriptions and semantic meaning of tabs, not just domain.
 6. If a tab clearly does not fit any predefined group, still assign it to the closest one.
+7. Output the groups in the SAME order as the list below (the group order is the user's preferred tab order).
 
 Predefined groups:
 ${list}`;
@@ -152,11 +153,17 @@ async function handleApplyGroups({ groups }) {
   const windowId = currentTabs[0].windowId;
 
   // In predefined mode, snap edited names back onto the saved group list so
-  // colors stay consistent and typos don't create stray groups.
+  // colors stay consistent and typos don't create stray groups. Tabs are then
+  // laid out in My Groups order (top of the list = leftmost tabs).
   const { groupMode, customGroups } = await browser.storage.local.get(["groupMode", "customGroups"]);
   let effectiveGroups = groups;
   if ((groupMode || "predefined") === "predefined") {
-    effectiveGroups = mergeIntoPredefined(groups, normalizeGroups(customGroups));
+    const predefined = normalizeGroups(customGroups);
+    effectiveGroups = mergeIntoPredefined(groups, predefined);
+    const order = new Map(predefined.map((g, i) => [g.name.toLowerCase(), i]));
+    effectiveGroups.sort(
+      (a, b) => (order.get(a.name.toLowerCase()) ?? 999) - (order.get(b.name.toLowerCase()) ?? 999)
+    );
   }
 
   let result;

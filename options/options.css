@@ -376,10 +376,10 @@ input[type="text"]:focus {
 
 .group-row {
   display: grid;
-  grid-template-columns: 90px 1fr 34px;
+  grid-template-columns: 90px 1fr 34px 56px;
   grid-template-areas:
-    "color name remove"
-    "desc desc desc";
+    "color name remove move"
+    "desc desc desc desc";
   gap: 8px;
   align-items: center;
 }
@@ -427,6 +427,26 @@ input[type="text"]:focus {
   font-size: 15px;
   line-height: 1;
   color: var(--red);
+}
+
+.group-row .group-move {
+  grid-area: move;
+  display: flex;
+  gap: 4px;
+}
+
+.group-row .group-move button {
+  width: 26px;
+  padding: 7px 0;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.group-row .group-move button:disabled {
+  opacity: 0.35;
+  cursor: default;
+  transform: none;
 }
 
 .hint {

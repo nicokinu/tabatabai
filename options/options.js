@@ -291,6 +291,26 @@ function renderGroupRows(groups) {
   for (const g of groups) {
     groupsList.appendChild(createGroupRow(g));
   }
+  syncMoveButtonState();
+}
+
+function moveRow(row, direction) {
+  const parent = row.parentNode;
+  if (direction === -1 && row.previousElementSibling) {
+    parent.insertBefore(row, row.previousElementSibling);
+  } else if (direction === 1 && row.nextElementSibling) {
+    parent.insertBefore(row.nextElementSibling, row);
+  }
+  syncMoveButtonState();
+}
+
+function syncMoveButtonState() {
+  const rows = [...groupsList.querySelectorAll(".group-row")];
+  rows.forEach((row, i) => {
+    const [up, down] = row.querySelectorAll(".group-move-up, .group-move-down");
+    if (up) up.disabled = i === 0;
+    if (down) down.disabled = i === rows.length - 1;
+  });
 }
 
 function createGroupRow(group) {
@@ -332,8 +352,29 @@ function createGroupRow(group) {
   removeBtn.className = "btn btn-secondary btn-sm group-remove";
   removeBtn.textContent = "×";
   removeBtn.title = "Remove group";
-  removeBtn.addEventListener("click", () => row.remove());
+  removeBtn.addEventListener("click", () => {
+    row.remove();
+    syncMoveButtonState();
+  });
   row.appendChild(removeBtn);
+
+  const moveCell = document.createElement("div");
+  moveCell.className = "group-move";
+  const upBtn = document.createElement("button");
+  upBtn.type = "button";
+  upBtn.className = "btn btn-secondary btn-sm group-move-up";
+  upBtn.textContent = "↑";
+  upBtn.title = "Move up (leftmost in tab strip)";
+  upBtn.addEventListener("click", () => moveRow(row, -1));
+  const downBtn = document.createElement("button");
+  downBtn.type = "button";
+  downBtn.className = "btn btn-secondary btn-sm group-move-down";
+  downBtn.textContent = "↓";
+  downBtn.title = "Move down (rightmost in tab strip)";
+  downBtn.addEventListener("click", () => moveRow(row, 1));
+  moveCell.appendChild(upBtn);
+  moveCell.appendChild(downBtn);
+  row.appendChild(moveCell);
 
   return row;
 }
@@ -348,6 +389,12 @@ function collectGroups() {
       color: row.querySelector(".group-color").value,
       description: row.querySelector(".group-desc").value.trim(),
     });
+  }
+  // Keep "Other" last regardless of manual ordering: it is the catch-all.
+  const idx = groups.findIndex((g) => g.name.toLowerCase() === "other");
+  if (idx !== -1 && idx !== groups.length - 1) {
+    const [other] = groups.splice(idx, 1);
+    groups.push(other);
   }
   return groups;
 }
