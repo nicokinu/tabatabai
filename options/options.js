@@ -88,7 +88,7 @@ function maskKey(key) {
 function showStatus(msg, type) {
   statusEl.textContent = msg;
   statusEl.className = `status ${type}`;
-  if (type === "success") setTimeout(() => (statusEl.textContent = ""), 2000);
+  if (type === "success") setTimeout(() => (statusEl.textContent = ""), 4000);
 }
 
 function createField(labelText, inputType, inputId, placeholder) {
@@ -418,8 +418,10 @@ groupModeSelect.addEventListener("change", updateGroupsEditorVisibility);
 
 async function importTabGroups() {
   btnImportGroups.disabled = true;
+  btnAddGroup.disabled = true;
   btnImportGroups.textContent = "読み込み中…";
   try {
+    showStatus("タブグループを読み込み中…", "");
     const resp = await browser.runtime.sendMessage({ action: "listTabGroups" });
     if (!resp.ok) throw new Error(resp.error || "読み込みに失敗しました。");
     if (resp.groups.length === 0) {
@@ -444,11 +446,17 @@ async function importTabGroups() {
       else groupsList.appendChild(row);
     }
     syncMoveButtonState();
-    showStatus(`${imported.length}件を追加しました(保存してください)`, "success");
+
+    if (resp.descriptionsFailed) {
+      showStatus(`${imported.length}件を追加(説明の自動生成はスキップ。後でSaveして)`, "success");
+    } else {
+      showStatus(`${imported.length}件を追加・説明を自動生成しました。確認してSave!`, "success");
+    }
   } catch (err) {
     showStatus(err.message || "読み込みに失敗しました。", "error");
   } finally {
     btnImportGroups.disabled = false;
+    btnAddGroup.disabled = false;
     btnImportGroups.textContent = "⤓ 今あるタブグループを反映";
   }
 }
