@@ -429,35 +429,26 @@ async function importTabGroups() {
       return;
     }
 
-    const existing = collectGroups();
-    const existingNames = new Set(existing.map((g) => g.name.toLowerCase()));
-    const imported = resp.groups.filter((g) => !existingNames.has(g.name.toLowerCase()));
-    if (imported.length === 0) {
-      showStatus("すべてのグループが既に登録済みです。", "error");
-      return;
+    // Replace the whole list: import is a rebuild, not a merge. Keep the
+    // "Other" catch-all (required by validation) even if no live group has it.
+    const imported = resp.groups.map((g) => ({ ...g }));
+    if (!imported.some((g) => g.name.toLowerCase() === "other")) {
+      imported.push({ name: "Other", color: "grey", description: "Anything that does not fit the groups above" });
     }
-
-    // Insert before "Other" so the catch-all stays last.
-    const otherRow = [...groupsList.querySelectorAll(".group-row")]
-      .find((r) => r.querySelector(".group-name").value.trim().toLowerCase() === "other");
-    for (const g of imported) {
-      const row = createGroupRow(g);
-      if (otherRow) groupsList.insertBefore(row, otherRow);
-      else groupsList.appendChild(row);
-    }
+    renderGroupRows(imported);
     syncMoveButtonState();
 
     if (resp.descriptionsFailed) {
-      showStatus(`${imported.length}件を追加(説明の自動生成はスキップ。後でSaveして)`, "success");
+      showStatus(`${imported.length - 1}グループに置き換えました(説明の自動生成はスキップ)。Saveして!`, "success");
     } else {
-      showStatus(`${imported.length}件を追加・説明を自動生成しました。確認してSave!`, "success");
+      showStatus(`${imported.length - 1}グループに置き換え・説明を自動生成しました。Saveして!`, "success");
     }
   } catch (err) {
     showStatus(err.message || "読み込みに失敗しました。", "error");
   } finally {
     btnImportGroups.disabled = false;
     btnAddGroup.disabled = false;
-    btnImportGroups.textContent = "⤓ 今あるタブグループを反映";
+    btnImportGroups.textContent = "⤓ タブグループからMy Groupsを作る";
   }
 }
 
